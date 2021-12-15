@@ -1,0 +1,68 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1,
+    "workspacePrefix": "/Users/changqing/codeStudy2/vue3-train"
+  },
+  "1 debug pnpm:package-manifest": {
+    "initial": {
+      "name": "@vue/reactivity",
+      "version": "1.0.0",
+      "main": "index.js",
+      "module": "dist/reactivity.esm-bundler.js",
+      "unpkg": "dist/reactivity.global.js",
+      "buildOptions": {
+        "name": "VueReactivity",
+        "formats": [
+          "esm-bundler",
+          "cjs",
+          "global"
+        ]
+      }
+    },
+    "prefix": "/Users/changqing/codeStudy2/vue3-train/packages/reactivity"
+  },
+  "2 debug pnpm:package-manifest": {
+    "initial": {
+      "name": "vue3-train",
+      "private": true,
+      "version": "1.0.0",
+      "description": "",
+      "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+      },
+      "keywords": [],
+      "author": "",
+      "license": "ISC",
+      "devDependencies": {
+        "@rollup/plugin-commonjs": "^21.0.1",
+        "@rollup/plugin-json": "^4.1.0",
+        "@rollup/plugin-node-resolve": "^13.1.1",
+        "execa": "^6.0.0",
+        "minimist": "^1.2.5",
+        "rollup": "^2.61.1",
+        "rollup-plugin-typescript2": "^0.31.1",
+        "typescript": "^4.5.4"
+      }
+    },
+    "prefix": "/Users/changqing/codeStudy2/vue3-train"
+  },
+  "3 debug pnpm:context": {
+    "currentLockfileExists": true,
+    "storeDir": "/Users/changqing/.pnpm-store/v3",
+    "virtualStoreDir": "/Users/changqing/codeStudy2/vue3-train/node_modules/.pnpm"
+  },
+  "4 debug pnpm:stage": {
+    "prefix": "/Users/changqing/codeStudy2/vue3-train",
+    "stage": "resolution_started"
+  },
+  "5 error pnpm": {
+    "code": "ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER",
+    "pkgsStack": [],
+    "err": {
+      "name": "pnpm",
+      "message": "_D isn't supported by any available resolver.",
+      "code": "ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER",
+      "stack": "pnpm: _D isn't supported by any available resolver.\n    at Object.resolve (/usr/local/lib/node_modules/pnpm/dist/pnpm.cjs:85228:17)\n    at async run (/usr/local/lib/node_modules/pnpm/dist/pnpm.cjs:71030:23)"
+    }
+  }
+}
