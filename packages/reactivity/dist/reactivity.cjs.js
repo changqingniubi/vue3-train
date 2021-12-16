@@ -10,4 +10,3 @@ Object.defineProperty(exports, 'isObject', {
 	enumerable: true,
 	get: function () { return shared.isObject; }
 });
-//# sourceMappingURL=reactivity.cjs.js.map

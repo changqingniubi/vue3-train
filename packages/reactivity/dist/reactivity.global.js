@@ -20,4 +20,3 @@ var VueReactivity = (function (exports) {
   return exports;
 
 })({});
-//# sourceMappingURL=reactivity.global.js.map

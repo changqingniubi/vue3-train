@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-16 16:56:56
- * @LastEditTime: 2021-12-16 20:28:28
+ * @LastEditTime: 2021-12-16 20:36:17
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -60,7 +60,7 @@ function createConfig(format,output){
     if(format === 'global'){
         output.name = pkg.buildOptions.name
     }else{
-        external = [...Object.keys(pkg.dependencies)]; // 如果是es6 cjs 不需要打包shared
+        external = [...Object.keys(pkg.dependencies||{})]; // 如果是es6 cjs 不需要打包shared
     }
     return { // createConfig的结果就是rollup的配置
         input: resolve(`src/index.ts`),// 入口
