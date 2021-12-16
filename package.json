@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node scripts/dev.js -s" 
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,7 @@
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.1.1",
-    "execa": "^6.0.0",
+    "execa": "4",
     "minimist": "^1.2.5",
     "rollup": "^2.61.1",
     "rollup-plugin-typescript2": "^0.31.1",
