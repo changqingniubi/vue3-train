@@ -2,11 +2,12 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-17 11:07:14
- * @LastEditTime: 2021-12-17 14:26:20
+ * @LastEditTime: 2021-12-18 16:16:05
  * @LastEditors: changqing
  * @Usage: 
  */
 import { isObject } from "@vue/shared";
+import { track, trigger } from "./effect";
 
 const enum ReactiveFlags{
   IS_REACTIVE = '__v_isReactive'
@@ -18,13 +19,17 @@ const mutableHandlers: ProxyHandler<Record<any, any>> = {
           return true;
       }
       // 这里取值了， 可以收集他在哪个effect中
+      track(target,key);
       const res = Reflect.get(target, key, recevier); // target[key]
       return res;
   },
   set(target, key, value, recevier) {
-
-      // 如果改变值了， 可以在这里触发effect更新
+      let oldValue = (target as any)[key]
       const res = Reflect.set(target, key, value, recevier); // target[key] = value
+       // 如果改变值了， 可以在这里触发effect更新
+      if(oldValue !== value){ // 值不发生变化 effect不需要重新执行
+        trigger(target,key); // 找属性对应的effect让她重新执行
+      }
       return res;
   }
 }
@@ -53,7 +58,9 @@ function createReactiveObject(target: object) {
 export function reactive(target: object) {
   return createReactiveObject(target)
 }
-
+export function toReactive(value){
+  return isObject(value) ? reactive(value) : value
+}
 // readonly shallowReactive shallowReadnly 
 // export function readonly(){
 // }
