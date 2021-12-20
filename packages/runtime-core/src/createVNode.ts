@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-18 22:17:44
- * @LastEditTime: 2021-12-18 22:31:54
+ * @LastEditTime: 2021-12-20 11:11:02
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -35,4 +35,21 @@ export function createVNode(type, props, children = null) { // h('div',{},['hell
     }
     // vnode 就可以描述出来 当前他是一个什么样的节点 儿子是什么样的
     return vnode; // createApp(App)
+}
+
+export function isVNode(vnode){
+    return !!vnode.__v_isVNode
+}
+
+export const Text = Symbol();
+export function normalizeVNode(vnode){
+    if(isObject(vnode)){
+        return vnode;
+    }
+    return createVNode(Text,null,String(vnode));
+}
+
+export function isSameVNodeType(n1,n2){
+    // 比较类型是否一致 比较key是否一致
+    return n1.type === n2.type && n1.key === n2.key;
 }

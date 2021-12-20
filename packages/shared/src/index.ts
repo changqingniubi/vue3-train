@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-15 17:55:45
- * @LastEditTime: 2021-12-18 21:15:17
+ * @LastEditTime: 2021-12-20 10:57:00
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -28,6 +28,8 @@ export const enum ShapeFlags {
   SUSPENSE = 1 << 7, // suspense组件
   COMPONENT = ShapeFlags.STATEFUL_COMPONENT | ShapeFlags.FUNCTIONAL_COMPONENT 	// 组件
 }
+const hasOwnProperty = Object.prototype.hasOwnProperty
+export const hasOwn = (value,key) => hasOwnProperty.call(value,key);
 /*
 let r = ShapeFlags.ELEMENT | ShapeFlags.FUNCTIONAL_COMPONENT; // r包含元素和函数式组件
 // 我们像看r 是不是元素
