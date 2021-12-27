@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-18 21:20:32
- * @LastEditTime: 2021-12-20 12:42:54
+ * @LastEditTime: 2021-12-27 20:49:23
  * @LastEditors: changqing
  * @Usage: 
 -->
@@ -25,7 +25,6 @@
         function useCounter() {
             const count = ref(0);
             const add = () => {
-                debugger
                 count.value++;
             }
             return { count, add }
@@ -53,8 +52,35 @@
             },
             // 每次更新重新调用render方法
             render(proxy){
-                return this.flag.value? h('div',{style:{color:'red'}},'hello'): h('div',{style:{color:'green'}},'world')
+                //return this.flag.value? h('div',{style:{color:'red'}},'hello'): h('div',{style:{color:'green'}},'world')
                 //return h('h1', { onClick:this.add,title:proxy.title }, 'hello world' + this.count.value)
+
+                return this.flag.value ?
+                    h('div', {},
+                        [
+                            h('li', { key: 'a' }, 'a'),
+                            h('li', { key: 'b' }, 'b'),
+                            h('li', { key: 'c' }, 'c'),
+                            h('li', { key: 'd' }, 'd'),
+                            h('li', { key: 'e' }, 'e'),
+
+                            h('li', { key: 'Q' }, 'Q'),
+                            h('li', { key: 'f' }, 'f'),
+                            h('li', { key: 'g' }, 'g'),
+
+                        ]) :
+                    h('div', {},
+                        [
+                            h('li', { key: 'a' }, 'a'),
+                            h('li', { key: 'b' }, 'b'),
+                            h('li', { key: 'e' }, 'e'),
+                            h('li', { key: 'c' }, 'c'),
+                            h('li', { key: 'd' }, 'd'),
+                            h('li', { key: 'h' }, 'h'),
+                            h('li', { key: 'f' }, 'f'),
+                            h('li', { key: 'g' }, 'g'),
+
+                        ])
             }
         }
 

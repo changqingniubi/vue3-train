@@ -286,6 +286,7 @@ Object.defineProperty(exports, 'isObject', {
   enumerable: true,
   get: function () { return shared.isObject; }
 });
+exports.ReactiveEffect = ReactiveEffect;
 exports.computed = computed;
 exports.effect = effect;
 exports.reactive = reactive;

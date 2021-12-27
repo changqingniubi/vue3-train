@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-20 11:06:00
- * @LastEditTime: 2021-12-20 14:27:55
+ * @LastEditTime: 2021-12-27 20:42:27
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -15,6 +15,57 @@ import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component';
 import { isSameVNodeType, normalizeVNode, Text } from './createVNode';
 
+function getSequence(arr) {
+    let len = arr.length;
+    const result = [0]; // 这里放的是索引
+    let p = arr.slice(0); // 用来记录前驱节点的索引， 用来追溯正确的顺序
+    let lastIndex;
+    let start;
+    let end;
+    let middle;
+    // 1.直接看元素 如果比当前的末尾大直接追加即可  ok 1
+    for (let i = 0; i < len; i++) {
+        const arrI = arr[i]; // 存的每一项的值
+        if (arrI !== 0) {
+            lastIndex = result[result.length - 1]; // 获取结果集中的最后一个
+            if (arr[lastIndex] < arrI) { // 当前结果集中的最后一个 和这一项比较
+
+                // 记录当前前一个人索引
+                p[i] = lastIndex;
+                result.push(i);
+                continue
+            }
+            // 二分查找 替换元素 
+            start = 0;
+            end = result.length - 1;
+            while (start < end) { // start = end    0  3 = 1.5  二分查找
+                middle = ((start + end) / 2) | 0; // 中间的索引 
+                // 找到序列中间的索引， 通过索引找到对应的值
+                if (arr[result[middle]] < arrI) {
+                    start = middle + 1;
+                } else {
+                    end = middle;
+                }
+            }
+            if (arrI < arr[result[start]]) { // 要替换成 5的索引
+
+                // 这里在替换之前 应该让当前元素
+                p[i] = result[start - 1]; // 用找到的索引 标记到p上
+
+                result[start] = i;
+            } // 找到更有潜力 替换之前的 （贪心算法 ）
+        }
+    }
+    let i = result.length; // 拿到最后一个 开始向前追溯
+    let last = result[i - 1]; // 取出最后一个
+
+    while (i-- > 0) { // 通过前驱节点找到正确的调用顺序
+        result[i] = last; // 最后一项肯定是正确的
+        last = p[last]; // 通过最后一项 向前查找
+    }
+    return result;
+    // [0,1,2,3]   [2,3,8,9]  // 用5找到  递增的序列为了快速查找我们可以采用二分查找的方式进行查找  O（n）  O(logn)
+}
 export function createRenderer(renderOptions) { // runtime-core   renderOptionsDOMAPI -> rootComponent -> rootProps -> container
     const {
         insert: hostInsert,
@@ -93,7 +144,7 @@ export function createRenderer(renderOptions) { // runtime-core   renderOptionsD
         }
     }
 
-    const mountElement = (vnode, container) => {
+    const mountElement = (vnode, container,anchor) => {
         // vnode中的children  可能是字符串 或者是数组  对象数组  字符串数组
 
         let { type, props, shapeFlag, children } = vnode; // 获取节点的类型 属性 儿子的形状 children
@@ -111,7 +162,7 @@ export function createRenderer(renderOptions) { // runtime-core   renderOptionsD
                 hostPatchProp(el, key, null, props[key]); // 给元素添加属性
             }
         }
-        hostInsert(el, container);
+        hostInsert(el, container,anchor);
     }
     const patchProps = (oldProps, newProps, el) => {
         if (oldProps === newProps) return;
@@ -130,19 +181,181 @@ export function createRenderer(renderOptions) { // runtime-core   renderOptionsD
         }
 
     }
+    const unmountChildren = (children) => {
+        for (let i = 0; i < children.length; i++) {
+            unmount(children[i])
+        }
+    }
+    const patchKeyedChildren = (c1, c2, container) => {
+        let e1 = c1.length - 1;
+        let e2 = c2.length - 1;
+        let i = 0; // 从头开始比较
+
+        // 1.sync from start 从头开始一个个孩子来比较 , 遇到不同的节点就停止了
+        while (i <= e1 && i <= e2) { // 如果i 和 新的列表或者老的列表指针重合说明就比较完毕了
+            const n1 = c1[i];
+            const n2 = c2[i];
+
+            if (isSameVNodeType(n1, n2)) { // 如果两个节点是相同节点 则需要递归比较孩子和自身的属性
+                patch(n1, n2, container)
+            } else {
+                break;
+            }
+            i++;
+        }
+        // sync from end
+        while (i <= e1 && i <= e2) { // 如果i 和 新的列表或者老的列表指针重合说明就比较完毕了
+            const n1 = c1[e1];
+            const n2 = c2[e2];
+            if (isSameVNodeType(n1, n2)) { // 如果两个节点是相同节点 则需要递归比较孩子和自身的属性
+                patch(n1, n2, container)
+            } else {
+                break;
+            }
+            e1--;
+            e2--
+        }
+        console.log(i, e1, e2); // 确定好了 头部 和 尾部相同的节点 定位到除了头部和尾部的节点
+
+        // 3.common sequence + mount
+
+        if (i > e1) { // 看i和e1 之间的关系 如果i 大于 e1  说明有新增的元素
+            if (i <= e2) {  // i和 e2 之间的内容就是新增的
+
+                const nextPos = e2 + 1;
+                // 取e2 的下一个元素 如果下一个没有 则长度和当前c2长度相同  说明追加
+                // 取e2 的下一个元素 如果下一个有 说明要在头部追加 则取出下一个节点作为参照物
+                const anchor = nextPos < c2.length ? c2[nextPos].el : null;
+
+                // 参照物的目的 要计算是向前插入还是向后插入
+                while (i <= e2) {
+                    patch(null, c2[i], container, anchor); // 没有参照物 就是appendChild
+                    i++;
+                }
+            }
+
+            // 4.common sequence + unmount
+        } else if (i > e2) {   // 看一下 i 和 e2 的关系 如果 e2 比i小 说明 老的多新的少
+            while (i <= e1) {
+                // i 和 e1 之间的就是要删除的
+                unmount(c1[i]);
+                i++;
+            }
+        }
+
+        // unknown sequence
+        const s1 = i;  // s1 -> e1 老的孩子列表
+        const s2 = i;  // s2 -> e2  新的孩子列表
+
+        // 根据新的节点 创造一个映射表 ， 用老的列表去里面找有没有，如果有则复用，没有就删除。 最后新的多余在追加
+
+        const keyToNewIndexMap = new Map(); // 这个目的是为了可以用老的来查看有没有新的
+        for (let i = s2; i <= e2; i++) {
+            const child = c2[i];
+            keyToNewIndexMap.set(child.key, i)
+        }
+
+        const toBepatched = e2 - s2 + 1; // 4
+        const newIndexToOldMapIndex = new Array(toBepatched).fill(0); // 最长递增子序列会用到这个列表  5 3 4 0
+
+
+
+
+        // 拿老的去新的中查找
+
+        // 找到一样的需要patch
+        for (let i = s1; i <= e1; i++) { // 新的索引映射到老的索引的映射表
+            const prevChild = c1[i]; // 拿到老的每一个节点
+            let newIndex = keyToNewIndexMap.get(prevChild.key);
+            if (newIndex == undefined) { // 删掉老的多余的
+                unmount(prevChild)
+            } else {
+                newIndexToOldMapIndex[newIndex - s2] = i + 1;// 保证填的肯定不是0 , 0意味着添加了一个元素
+
+                // 比较两个人的节点 
+                patch(prevChild, c2[newIndex], container); // 填表后 还要比对属性和儿子
+            }
+        }
+
+        // 在去移动需要移动的元素
+        let queue = getSequence(newIndexToOldMapIndex); // 求出队列   [1,2]  1 ,2 不用动
+
+        let j = queue.length - 1; // 拿到最长递增子序列的末尾索引
+        for (let i = toBepatched - 1; i >= 0; i--) {
+            let lastIndex = s2 + i; // h的索引
+            let lastChild = c2[lastIndex];
+            let anchor = lastIndex + 1 < c2.length ? c2[lastIndex + 1].el : null
+
+            if (newIndexToOldMapIndex[i] == 0) { // 等于0的时候还没有真实节点，需要创建真实节点在插入
+                patch(null, lastChild, container, anchor); // 创建一个h 插入到 f的前面
+            } else {
+                // 这里可以进行优化 问题出在可能有一些节点不需要移动，但是还是全部插入了一遍
+                // 性能消耗， 最长递增子序列 减少dom的插入操作 
+                if (i !== queue[j]) {
+                    // 3 2 1 0  倒叙插入 所以  i的值 就是  3 2 1 0
+                    hostInsert(lastChild.el, container, anchor); // 将列表倒序的插入
+                }else{
+                    j--; // 这里做了一个优化 表示元素不需要移动了
+                }
+            }
+        }
+    }
+
+    const patchChildren = (n1, n2, el) => {
+        const c1 = n1 && n1.children;
+        const c2 = n2 && n2.children;
+        const prevShapeFlag = n1.shapeFlag;
+        const shapeFlag = n2.shapeFlag
+        // c1 和 c2 儿子有哪些类型 
+        // 1.之前是数组 ， 现在是文本   删除老的节点 ，用新的文本替换掉
+        // 2.之前是数组 ， 现在也是数组  比较两个儿子列表的差异  （* diff算法）
+        // 3.之前是文本， 现在是是空   直接删除老的即可
+
+        // 4.之前是文本  现在也是文本 直接更新文本
+        // 5.之前是文本 现在是数组  删除文本 新增儿子
+        // 6之前是空  现在是文本 
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                unmountChildren(c1); // 1.
+            }
+            if (c1 !== c2) { // 4.
+                hostSetElementText(el, c2);
+            }
+        } else {
+            // 现在是数组 
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    patchKeyedChildren(c1, c2, el);
+                } else {
+                    // 之前是数组  空文本
+                    unmountChildren(c1);
+                }
+            } else {
+                // 之前是文本
+                if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+                    hostSetElementText(el, '');
+                }
+                if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                    mountChildren(c2, el);
+                }
+            }
+        }
+    }
     const patchElement = (n1, n2) => {
         let el = n2.el = n1.el; // 先比较元素 元素一致 则复用 
         const oldProps = n1.props || {}; // 复用后比较属性
         const newProps = n2.props || {};
         patchProps(oldProps, newProps, el);
 
-        // 实现比较儿子  diff算法  
+         // 实现比较儿子  diff算法   我们的diff算法是同级别比较的
+
+         patchChildren(n1, n2, el); // 用新的儿子n2 和 老的儿子n1 来进行比对  比对后更新容器元素  
 
     }
-    const processElement = (n1, n2, container) => { // 组件对应的返回值的初始化
+    const processElement = (n1, n2, container,anchor) => { // 组件对应的返回值的初始化
         if (n1 == null) {
             // 初始化
-            mountElement(n2, container);
+            mountElement(n2, container,anchor);
         } else {
             // diff
             patchElement(n1, n2); // 更新两个元素之间的差异
@@ -153,13 +366,14 @@ export function createRenderer(renderOptions) { // runtime-core   renderOptionsD
         if (n1 === null) {
             // 文本的初始化 
             let textNode = hostCreateText(n2.children);
+            n2.el = textNode; // 要让虚拟节点和真实节点挂载上
             hostInsert(textNode, container)
         }
     }
     const unmount = (vnode) => {
         hostRemove(vnode.el); // 删除真实节点即可
     }
-    const patch = (n1, n2, container) => {
+    const patch = (n1, n2, container,anchor = null) => {
         // 两个元素 完全没用关系 
         if (n1 && !isSameVNodeType(n1, n2)) { // n1 有值 再看两个是否是相同节点
             unmount(n1);
@@ -180,7 +394,7 @@ export function createRenderer(renderOptions) { // runtime-core   renderOptionsD
                 if (shapeFlag & ShapeFlags.COMPONENT) {
                     processComponent(n1, n2, container);
                 } else if (shapeFlag & ShapeFlags.ELEMENT) {
-                    processElement(n1, n2, container);
+                    processElement(n1, n2, container,anchor);
                 }
         }
     }

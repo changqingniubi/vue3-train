@@ -279,5 +279,5 @@ function ref(value) {
 // }
 // reactive readonly
 
-export { computed, effect, reactive, ref };
+export { ReactiveEffect, computed, effect, reactive, ref };
 //# sourceMappingURL=reactivity.esm-bundler.js.map
