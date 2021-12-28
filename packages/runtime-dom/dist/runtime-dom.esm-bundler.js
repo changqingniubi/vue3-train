@@ -1023,4 +1023,3 @@ const createSSRApp = () => {
 };
 
 export { ReactiveEffect, computed, createApp, createRenderer, createSSRApp, effect, h, isObject, reactive, ref };
-//# sourceMappingURL=runtime-dom.esm-bundler.js.map

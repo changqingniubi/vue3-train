@@ -1041,4 +1041,3 @@ var VueRuntimeDOM = (function (exports) {
   return exports;
 
 })({});
-//# sourceMappingURL=runtime-dom.global.js.map
