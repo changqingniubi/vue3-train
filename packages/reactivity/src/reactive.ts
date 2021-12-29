@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-17 11:07:14
- * @LastEditTime: 2021-12-18 16:16:05
+ * @LastEditTime: 2021-12-29 18:12:07
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -21,6 +21,10 @@ const mutableHandlers: ProxyHandler<Record<any, any>> = {
       // 这里取值了， 可以收集他在哪个effect中
       track(target,key);
       const res = Reflect.get(target, key, recevier); // target[key]
+      //当取值时返回的值是对象，则返回这个对象的代理对象，从而实现深度代理
+      if(isObject(res)){
+        return reactive(res); 
+      }
       return res;
   },
   set(target, key, value, recevier) {
@@ -34,10 +38,11 @@ const mutableHandlers: ProxyHandler<Record<any, any>> = {
   }
 }
 // map和weakMap的区别
-const reactiveMap = new WeakMap(); // weakmap 弱引用   key必须是对象，如果key没有被引用可以被自动销毁
+const reactiveMap = new WeakMap(); // 缓存列表 weakmap 弱引用   key必须是对象，如果key没有被引用可以被自动销毁
 
 function createReactiveObject(target: object) { 
   // 先默认认为这个target已经是代理过的属性了
+  //在创建响应式对象时先进行取值，看是否已经是响应,这样我们防止重复代理就做好了
   if ((target as any)[ReactiveFlags.IS_REACTIVE]) {
       return target
   }

@@ -2,7 +2,7 @@
  * @Description: 
  * @Author: changqing
  * @Date: 2021-12-18 15:34:57
- * @LastEditTime: 2021-12-18 16:09:05
+ * @LastEditTime: 2021-12-29 18:09:09
  * @LastEditors: changqing
  * @Usage: 
  */
@@ -22,10 +22,10 @@
 // effect1 -> address
 
 
-let effectStack = []; // 目的就是为了能保证我们effect执行的时候 可以存储正确的关系
-let activeEffect;
+let effectStack = []; // 存放effect列表 目的就是为了能保证我们effect执行的时候 可以存储正确的关系
+let activeEffect; //当前正在执行的effect
 
-
+//// 清理effect
 function cleanupEffect(effect) {
   const { deps } = effect;
   for (let dep of deps) {
@@ -71,6 +71,7 @@ export function isTracking() {
 }
 
 const targetMap = new WeakMap();
+//将属性和对应的effect维护成映射关系，后续属性变化可以触发对应的effect函数重新 run
 export function track(target, key) { // 一个属性对应多个effect， 一个effect中依赖了多个属性 =》 多对多
   // 是只要取值我就要收集吗？不是
   if (!isTracking()) { // 如果这个属性 不依赖于effect直接跳出即可
@@ -90,7 +91,7 @@ export function trackEffects(dep) {
   let shouldTrack = !dep.has(activeEffect); // 看一下这个属性有没有存过这个effect
   if (shouldTrack) {
       dep.add(activeEffect); // // {对象：map{name:set[effect,effect]}}
-      activeEffect.deps.push(dep); // 稍后用到
+      activeEffect.deps.push(dep); // 让effect记住dep，这样后续可以用于清理
   } // { 对象：{name:set,age:set}
 
 }
@@ -103,7 +104,7 @@ export function trigger(target, key) {
   }
   let effects = [];
   for (const dep of deps) {
-      effects.push(...dep)
+      effects.push(...dep) //// 将effect全部存到effects中
   }
   triggerEffects(effects);
 }
@@ -113,7 +114,7 @@ export function triggerEffects(dep) {
           if (effect.scheduler) {
               return effect.scheduler()
           }
-          effect.run(); // 执行effect
+          effect.run(); // // 重新执行一遍 执行effect
       }
   }
 }
